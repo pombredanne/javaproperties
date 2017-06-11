@@ -6,7 +6,11 @@
 .. image:: https://travis-ci.org/jwodder/javaproperties.svg?branch=master
     :target: https://travis-ci.org/jwodder/javaproperties
 
+.. image:: https://coveralls.io/repos/github/jwodder/javaproperties/badge.svg?branch=master
+    :target: https://coveralls.io/github/jwodder/javaproperties?branch=master
+
 .. image:: https://img.shields.io/pypi/pyversions/javaproperties.svg
+    :target: https://pypi.python.org/pypi/javaproperties
 
 .. image:: https://img.shields.io/github/license/jwodder/javaproperties.svg?maxAge=2592000
     :target: https://opensource.org/licenses/MIT
@@ -17,15 +21,15 @@
 | `Documentation <https://javaproperties.readthedocs.io/en/latest>`_
 | `Issues <https://github.com/jwodder/javaproperties/issues>`_
 
-``javaproperties`` provides support for reading & writing Java |properties|_
-files (both the simple line-oriented format and XML) with a simple API based on
-the ``json`` module — though, for recovering Java addicts, it also includes a
+``javaproperties`` provides support for reading & writing |properties|_ (both
+the simple line-oriented format and XML) with a simple API based on the
+``json`` module — though, for recovering Java addicts, it also includes a
 ``Properties`` class intended to match the behavior of |propclass|_ as much as
 is Pythonically possible.
 
-Also included are three command-line programs for basic manipulation of
-``.properties`` files (getting & setting values, etc.) as well as converting to
-& from the much more widely-supported JSON format.
+Previous versions of ``javaproperties`` included command-line programs for
+basic manipulation of ``.properties`` files.  As of version 0.4.0, these
+programs have been split off into a separate package, |clipkg|_.
 
 
 Installation
@@ -35,6 +39,10 @@ Just use `pip <https://pip.pypa.io>`_ (You have pip, right?) to install
 ``javaproperties`` and its dependencies::
 
     pip install javaproperties
+
+If you happen to be still stuck using Python 2.6, you will need to make sure
+that the `ordereddict <https://pypi.python.org/pypi/ordereddict>`_ package is
+installed as well: ``pip install ordereddict``
 
 
 Examples
@@ -112,8 +120,11 @@ Dump as XML::
 `And more! <https://javaproperties.readthedocs.io>`_
 
 
-.. |properties| replace:: ``.properties``
+.. |properties| replace:: Java ``.properties`` files
 .. _properties: https://en.wikipedia.org/wiki/.properties
 
-.. |propclass| replace:: Java 8's ``java.net.Properties``
+.. |propclass| replace:: Java 8's ``java.util.Properties``
 .. _propclass: https://docs.oracle.com/javase/8/docs/api/java/util/Properties.html
+
+.. |clipkg| replace:: ``javaproperties-cli``
+.. _clipkg: https://github.com/jwodder/javaproperties-cli

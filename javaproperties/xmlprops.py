@@ -10,9 +10,9 @@ def load_xml(fp, object_pairs_hook=dict):
     and return a `dict` of the key-value pairs.
 
     Beyond basic XML well-formedness, `load_xml` only checks that the root
-    element is named ``properties`` and that all of its ``entry`` children have
-    ``key`` attributes.  No further validation is performed; if any ``entry``\
-    s happen to contain nested tags, the behavior is undefined.
+    element is named "``properties``" and that all of its ``<entry>`` children
+    have ``key`` attributes.  No further validation is performed; if any
+    ``<entry>``\ s happen to contain nested tags, the behavior is undefined.
 
     By default, the key-value pairs extracted from ``fp`` are combined into a
     `dict` with later occurrences of a key overriding previous occurrences of
@@ -25,9 +25,9 @@ def load_xml(fp, object_pairs_hook=dict):
     .. note::
 
         This uses `xml.etree.ElementTree` for parsing, which does not have
-        decent support for `unicode <python2:unicode>` input in Python 2.
-        Files containing non-ASCII characters need to be opened in binary mode
-        in Python 2, while Python 3 accepts both binary and text input.
+        decent support for |unicode|_ input in Python 2.  Files containing
+        non-ASCII characters need to be opened in binary mode in Python 2,
+        while Python 3 accepts both binary and text input.
 
     :param fp: the file from which to read the XML properties document
     :type fp: file-like object
@@ -46,9 +46,9 @@ def loads_xml(s, object_pairs_hook=dict):
     return a `dict` of the key-value pairs.
 
     Beyond basic XML well-formedness, `loads_xml` only checks that the root
-    element is named ``properties`` and that all of its ``entry`` children have
-    ``key`` attributes.  No further validation is performed; if any ``entry``\
-    s happen to contain nested tags, the behavior is undefined.
+    element is named "``properties``" and that all of its ``<entry>`` children
+    have ``key`` attributes.  No further validation is performed; if any
+    ``<entry>``\ s happen to contain nested tags, the behavior is undefined.
 
     By default, the key-value pairs extracted from ``s`` are combined into a
     `dict` with later occurrences of a key overriding previous occurrences of
@@ -61,11 +61,10 @@ def loads_xml(s, object_pairs_hook=dict):
     .. note::
 
         This uses `xml.etree.ElementTree` for parsing, which does not have
-        decent support for `unicode <python2:unicode>` input in Python 2.
-        Strings containing non-ASCII characters need to be encoded as bytes in
-        Python 2 (Use either UTF-8 or UTF-16 if the XML document does not
-        contain an encoding declaration), while Python 3 accepts both binary
-        and text input.
+        decent support for |unicode|_ input in Python 2.  Strings containing
+        non-ASCII characters need to be encoded as bytes in Python 2 (Use
+        either UTF-8 or UTF-16 if the XML document does not contain an encoding
+        declaration), while Python 3 accepts both binary and text input.
 
     :param string s: the string from which to read the XML properties document
     :param callable object_pairs_hook: class or function for combining the
@@ -107,7 +106,7 @@ def dump_xml(props, fp, comment=None, encoding='UTF-8', sort_keys=False):
     :return: `None`
     """
     fp = codecs.lookup(encoding).streamwriter(fp, errors='xmlcharrefreplace')
-    print('<?xml version="1.0" encoding={0} standalone="no"?>'\
+    print('<?xml version="1.0" encoding={0} standalone="no"?>'
           .format(quoteattr(encoding)), file=fp)
     for s in _stream_xml(props, comment, sort_keys):
         print(s, file=fp)

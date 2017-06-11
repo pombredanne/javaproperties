@@ -2,7 +2,6 @@
 import collections
 from   six       import string_types
 from   .reading  import load
-from   .util     import itemize
 from   .writing  import dump
 from   .xmlprops import load_xml, dump_xml
 
@@ -12,11 +11,19 @@ class Properties(collections.MutableMapping):
     """
     A port of |java8properties|_ that tries to match its behavior as much as is
     Pythonically possible.  `Properties` behaves like a normal
-    `~collections.MutableMapping` class (i.e., you can do ``props[key] =
+    `~collections.abc.MutableMapping` class (i.e., you can do ``props[key] =
     value`` and so forth), except that it may only be used to store strings
-    (`str <python2:str>` and `unicode <python2:unicode>` in Python 2; just
-    `str` in Python 3).  Attempts to use a non-string object as a key or value
-    will produce a `~exceptions.TypeError`.
+    (|py2str|_ and |unicode|_ in Python 2; just `str` in Python 3).  Attempts
+    to use a non-string object as a key or value will produce a `TypeError`.
+
+    Two `Properties` instances compare equal iff both their key-value pairs and
+    :attr:`defaults` attributes are equal.  When comparing a `Properties`
+    instance to any other type of mapping, only the key-value pairs are
+    considered.
+
+    .. versionchanged:: 0.5.0
+         `Properties` instances can now compare equal to `dict`\\ s and other
+         mapping types
 
     :param data: A mapping or iterable of ``(key, value)`` pairs with which to
         initialize the `Properties` object.  All keys and values in ``data``
@@ -26,20 +33,19 @@ class Properties(collections.MutableMapping):
         for `getProperty`
     :type defaults: `Properties` or `None`
 
-    .. |java8properties| replace:: Java 8's ``java.net.Properties``
+    .. |java8properties| replace:: Java 8's ``java.util.Properties``
     .. _java8properties: https://docs.oracle.com/javase/8/docs/api/java/util/Properties.html
     """
 
     def __init__(self, data=None, defaults=None):
         self.data = {}
-        if data is not None:
-            for k,v in itemize(data):
-                self[k] = v
         #: A `Properties` subobject used as fallback for `getProperty`.  Only
         #: `getProperty`, `propertyNames`, and `stringPropertyNames` use this
         #: attribute; all other methods (including the standard mapping
         #: methods) ignore it.
         self.defaults = defaults
+        if data is not None:
+            self.update(data)
 
     def __getitem__(self, key):
         if not isinstance(key, string_types):
@@ -68,17 +74,15 @@ class Properties(collections.MutableMapping):
                 .format(__package__, self)
 
     def __eq__(self, other):
-        return type(self) is type(other) and \
-                self.data == other.data and \
-                self.defaults == other.defaults
+        if isinstance(other, Properties):
+            return self.data == other.data and self.defaults == other.defaults
+        elif isinstance(other, collections.Mapping):
+            return dict(self) == other
+        else:
+            return NotImplemented
 
     def __ne__(self, other):
         return not (self == other)
-
-    def __nonzero__(self):
-        return bool(self.data)
-
-    __bool__ = __nonzero__
 
     def getProperty(self, key, defaultValue=None):
         """
@@ -112,10 +116,16 @@ class Properties(collections.MutableMapping):
         universal newlines enabled.  If it is a binary filehandle, its contents
         are decoded as Latin-1.
 
+        .. versionchanged:: 0.5.0
+            Invalid ``\\uXXXX`` escape sequences will now cause an
+            `InvalidUEscapeError` to be raised
+
         :param inStream: the file from which to read the ``.properties``
             document
         :type inStream: file-like object
         :return: `None`
+        :raises InvalidUEscapeError: if an invalid ``\\uXXXX`` escape sequence
+            occurs in the input
         """
         self.data.update(load(inStream))
 
@@ -176,10 +186,9 @@ class Properties(collections.MutableMapping):
         .. note::
 
             This uses `xml.etree.ElementTree` for parsing, which does not have
-            decent support for `unicode <python2:unicode>` input in Python 2.
-            Files containing non-ASCII characters need to be opened in binary
-            mode in Python 2, while Python 3 accepts both binary and text
-            input.
+            decent support for |unicode|_ input in Python 2.  Files containing
+            non-ASCII characters need to be opened in binary mode in Python 2,
+            while Python 3 accepts both binary and text input.
 
         :param inStream: the file from which to read the XML properties document
         :type inStream: file-like object
@@ -205,3 +214,12 @@ class Properties(collections.MutableMapping):
         :return: `None`
         """
         dump_xml(self.data, out, comment=comment, encoding=encoding)
+
+    def copy(self):
+        """
+        .. versionadded:: 0.5.0
+
+        Create a shallow copy of the mapping.  The copy's `defaults` attribute
+        will be the same instance as the original's `defaults`.
+        """
+        return type(self)(self.data, self.defaults)

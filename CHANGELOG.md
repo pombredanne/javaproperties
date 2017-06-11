@@ -1,7 +1,26 @@
-v0.2.1 (in development)
+v0.5.0 (in development)
 -----------------------
+- Invalid `\uXXXX` escape sequences now cause an `InvalidUEscapeError` to be
+  raised
+- `Properties` instances can now compare equal to `dict`s and other mapping
+  types
+- Gave `Properties` a `copy` method
+
+v0.4.0 (2017-04-22)
+-------------------
+- Split off the command-line programs into a separate package,
+  [`javaproperties-cli`](https://github.com/jwodder/javaproperties-cli)
+
+v0.3.0 (2017-04-13)
+-------------------
+- Added the `PropertiesFile` class for preserving comments in files [#1]
+- The `ordereddict` package is now required under Python 2.6
+
+v0.2.1 (2017-03-20)
+-------------------
 - **Bugfix** to `javaproperties` command: Don't die horribly on missing
   non-ASCII keys
+- PyPy now supported
 
 v0.2.0 (2016-11-14)
 -------------------
