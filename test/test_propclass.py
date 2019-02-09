@@ -1,9 +1,13 @@
 from   __future__     import unicode_literals
-import collections
-from   freezegun      import freeze_time
+import time
 import pytest
-from   six            import StringIO
-from   javaproperties import Properties
+from   six            import PY2, BytesIO, StringIO
+from   javaproperties import Properties, dumps
+
+if PY2:
+    from collections     import Iterator
+else:
+    from collections.abc import Iterator
 
 # Making the global INPUT object a StringIO would cause it be exhausted after
 # the first test and thereafter appear to be empty.  Thus, a new StringIO must
@@ -26,8 +30,20 @@ foo : second definition
 # Comment at end of file
 '''
 
-@freeze_time('2016-11-07 20:29:40')
-def test_propclass_empty():
+XML_INPUT = '''\
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+    <comment>Thu Mar 16 17:06:52 EDT 2017</comment>
+    <entry key="foo">first definition</entry>
+    <entry key="bar">only definition</entry>
+    <entry key="key">value</entry>
+    <entry key="zebra">apple</entry>
+    <entry key="foo">second definition</entry>
+</properties>
+'''
+
+def test_propclass_empty(mocker):
+    mocker.patch('time.localtime', return_value=time.localtime(1478550580))
     p = Properties()
     assert len(p) == 0
     assert not bool(p)
@@ -35,6 +51,7 @@ def test_propclass_empty():
     s = StringIO()
     p.store(s)
     assert s.getvalue() == '#Mon Nov 07 15:29:40 EST 2016\n'
+    time.localtime.assert_called_once_with(None)
 
 def test_propclass_load():
     p = Properties()
@@ -51,6 +68,31 @@ def test_propclass_load():
 def test_propclass_nonempty_load():
     p = Properties({"key": "lock", "horse": "orange"})
     p.load(StringIO(INPUT))
+    assert len(p) == 5
+    assert bool(p)
+    assert dict(p) == {
+        "foo": "second definition",
+        "bar": "only definition",
+        "horse": "orange",
+        "key": "value",
+        "zebra": "apple",
+    }
+
+def test_propclass_loadFromXML():
+    p = Properties()
+    p.loadFromXML(StringIO(XML_INPUT))
+    assert len(p) == 4
+    assert bool(p)
+    assert dict(p) == {
+        "foo": "second definition",
+        "bar": "only definition",
+        "key": "value",
+        "zebra": "apple",
+    }
+
+def test_propclass_nonempty_loadFromXML():
+    p = Properties({"key": "lock", "horse": "orange"})
+    p.loadFromXML(StringIO(XML_INPUT))
     assert len(p) == 5
     assert bool(p)
     assert dict(p) == {
@@ -187,12 +229,33 @@ def test_propclass_eq_empty():
     p2 = Properties()
     assert p is not p2
     assert p == p2
+    assert p2 == p
+
+def test_propclass_defaults_neq_empty():
+    p = Properties()
+    p2 = Properties(defaults=Properties({"key": "lock", "horse": "orange"}))
+    assert p != p2
+    assert p2 != p
 
 def test_propclass_eq_nonempty():
     p = Properties({"Foo": "bar"})
     p2 = Properties({"Foo": "bar"})
     assert p is not p2
     assert p == p2
+    assert p2 == p
+
+def test_propclass_eq_nonempty_defaults():
+    p = Properties({"Foo": "bar"}, defaults=Properties({"key": "lock"}))
+    p2 = Properties({"Foo": "bar"}, defaults=Properties({"key": "lock"}))
+    assert p is not p2
+    assert p == p2
+    assert p2 == p
+
+def test_propclass_neq_nonempty_neq_defaults():
+    p = Properties({"Foo": "bar"}, defaults=Properties({"key": "lock"}))
+    p2 = Properties({"Foo": "bar"}, defaults=Properties({"key": "Florida"}))
+    assert p != p2
+    assert p2 != p
 
 def test_propclass_eq_self():
     p = Properties()
@@ -204,6 +267,14 @@ def test_propclass_neq():
 
 def test_propclass_eq_dict():
     p = Properties({"Foo": "BAR"})
+    assert p == {"Foo": "BAR"}
+    assert {"Foo": "BAR"} == p
+    assert p != {"Foo": "bar"}
+    assert {"Foo": "bar"} != p
+
+def test_propclass_defaults_eq_dict():
+    defs = Properties({"key": "lock", "horse": "orange"})
+    p = Properties({"Foo": "BAR"}, defaults=defs)
     assert p == {"Foo": "BAR"}
     assert {"Foo": "BAR"} == p
     assert p != {"Foo": "bar"}
@@ -271,7 +342,7 @@ def test_propclass_neq_string():
 def test_propclass_propertyNames():
     p = Properties({"key": "value", "apple": "zebra", "foo": "bar"})
     names = p.propertyNames()
-    assert isinstance(names, collections.Iterator)
+    assert isinstance(names, Iterator)
     assert sorted(names) == ["apple", "foo", "key"]
 
 def test_propclass_stringPropertyNames():
@@ -294,6 +365,13 @@ def test_propclass_getProperty_missing_default():
     p = Properties({"key": "value", "apple": "zebra", "foo": "bar"})
     assert p.getProperty("missing", "default") == "default"
 
+def test_propclass_get_nonstring_key():
+    p = Properties({"key": "value", "apple": "zebra", "foo": "bar"})
+    with pytest.raises(TypeError) as excinfo:
+        p[42]
+    assert str(excinfo.value) == \
+        'Keys & values of Properties objects must be strings'
+
 def test_propclass_set_nonstring_key():
     p = Properties({"key": "value", "apple": "zebra", "foo": "bar"})
     with pytest.raises(TypeError) as excinfo:
@@ -305,6 +383,13 @@ def test_propclass_set_nonstring_value():
     p = Properties({"key": "value", "apple": "zebra", "foo": "bar"})
     with pytest.raises(TypeError) as excinfo:
         p['forty-two'] = 42
+    assert str(excinfo.value) == \
+        'Keys & values of Properties objects must be strings'
+
+def test_propclass_del_nonstring_key():
+    p = Properties({"key": "value", "apple": "zebra", "foo": "bar"})
+    with pytest.raises(TypeError) as excinfo:
+        del p[42]
     assert str(excinfo.value) == \
         'Keys & values of Properties objects must be strings'
 
@@ -362,7 +447,7 @@ def test_propclass_defaults_propertyNames():
     defs = Properties({"key": "lock", "horse": "orange"})
     p = Properties({"key": "value", "apple": "zebra"}, defaults=defs)
     names = p.propertyNames()
-    assert isinstance(names, collections.Iterator)
+    assert isinstance(names, Iterator)
     assert sorted(names) == ["apple", "horse", "key"]
 
 def test_propclass_defaults_stringPropertyNames():
@@ -439,8 +524,8 @@ def test_propclass_defaults_setitem_new_override():
     assert dict(p) == {"key": "value", "apple": "zebra", "horse": "pony"}
     assert dict(defs) == {"key": "lock", "horse": "orange"}
 
-@freeze_time('2016-11-07 20:29:40')
-def test_propclass_empty_setitem():
+def test_propclass_empty_setitem(mocker):
+    mocker.patch('time.localtime', return_value=time.localtime(1478550580))
     p = Properties()
     p["key"] = "value"
     assert len(p) == 1
@@ -449,11 +534,73 @@ def test_propclass_empty_setitem():
     s = StringIO()
     p.store(s)
     assert s.getvalue() == '#Mon Nov 07 15:29:40 EST 2016\nkey=value\n'
+    time.localtime.assert_called_once_with(None)
 
-# store() when non-empty (with & without comment)
-# dumps() function?
+def test_propclass_store(mocker):
+    mocker.patch('time.localtime', return_value=time.localtime(1478550580))
+    p = Properties({"key": "value"})
+    s = StringIO()
+    p.store(s)
+    assert s.getvalue() == '#Mon Nov 07 15:29:40 EST 2016\nkey=value\n'
+    time.localtime.assert_called_once_with(None)
+
+def test_propclass_store_comment(mocker):
+    mocker.patch('time.localtime', return_value=time.localtime(1478550580))
+    p = Properties({"key": "value"})
+    s = StringIO()
+    p.store(s, comments='Testing')
+    assert s.getvalue() == \
+        '#Testing\n#Mon Nov 07 15:29:40 EST 2016\nkey=value\n'
+    time.localtime.assert_called_once_with(None)
+
+def test_propclass_store_defaults(mocker):
+    mocker.patch('time.localtime', return_value=time.localtime(1478550580))
+    defs = Properties({"key": "lock", "horse": "orange"})
+    p = Properties({"key": "value"}, defaults=defs)
+    s = StringIO()
+    p.store(s)
+    assert s.getvalue() == '#Mon Nov 07 15:29:40 EST 2016\nkey=value\n'
+    time.localtime.assert_called_once_with(None)
+
+def test_propclass_storeToXML():
+    p = Properties({"key": "value"})
+    s = BytesIO()
+    p.storeToXML(s)
+    assert s.getvalue() == b'''\
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+<entry key="key">value</entry>
+</properties>
+'''
+
+def test_propclass_storeToXML_comment():
+    p = Properties({"key": "value"})
+    s = BytesIO()
+    p.storeToXML(s, comment='Testing')
+    assert s.getvalue() == b'''\
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+<comment>Testing</comment>
+<entry key="key">value</entry>
+</properties>
+'''
+
+def test_propclass_storeToXML_defaults():
+    defs = Properties({"key": "lock", "horse": "orange"})
+    p = Properties({"key": "value"}, defaults=defs)
+    s = BytesIO()
+    p.storeToXML(s)
+    assert s.getvalue() == b'''\
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+<entry key="key">value</entry>
+</properties>
+'''
+
+def test_propclass_dumps_function():
+    assert dumps(Properties({"key": "value"}), timestamp=False) == 'key=value\n'
+
 # defaults with defaults
-# asserting `load` doesn't affect `defaults`
-# equality when `defaults` is involved
-# loadFromXML
-# storeToXML (with & without comment)

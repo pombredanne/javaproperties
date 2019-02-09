@@ -1,13 +1,9 @@
-from   __future__ import unicode_literals
-import os.path
-import sys
-
-sys.path.insert(0, os.path.abspath('..'))
-from   javaproperties import __version__
+from __future__     import unicode_literals
+from javaproperties import __version__
 
 project   = 'javaproperties'
 author    = 'John T. Wodder II'
-copyright = '2016-2017 John T. Wodder II'
+copyright = '2016-2018 John T. Wodder II'
 
 extensions = [
     'sphinx.ext.autodoc',
@@ -44,6 +40,9 @@ rst_epilog = '''
 '''
 
 html_theme = 'sphinx_rtd_theme'
+html_theme_options = {
+    "collapse_navigation": False,
+}
 html_last_updated_fmt = '%Y %b %d'
 html_show_sourcelink = True
 html_show_sphinx = True

@@ -1,13 +1,17 @@
 # -*- coding: utf-8 -*-
-import collections
-from   six       import string_types
+from   six       import PY2, string_types
 from   .reading  import load
 from   .writing  import dump
 from   .xmlprops import load_xml, dump_xml
 
+if PY2:
+    from collections     import Mapping, MutableMapping
+else:
+    from collections.abc import Mapping, MutableMapping
+
 _type_err = 'Keys & values of Properties objects must be strings'
 
-class Properties(collections.MutableMapping):
+class Properties(MutableMapping):
     """
     A port of |java8properties|_ that tries to match its behavior as much as is
     Pythonically possible.  `Properties` behaves like a normal
@@ -40,9 +44,9 @@ class Properties(collections.MutableMapping):
     def __init__(self, data=None, defaults=None):
         self.data = {}
         #: A `Properties` subobject used as fallback for `getProperty`.  Only
-        #: `getProperty`, `propertyNames`, and `stringPropertyNames` use this
-        #: attribute; all other methods (including the standard mapping
-        #: methods) ignore it.
+        #: `getProperty`, `propertyNames`, `stringPropertyNames`, and `__eq__`
+        #: use this attribute; all other methods (including the standard
+        #: mapping methods) ignore it.
         self.defaults = defaults
         if data is not None:
             self.update(data)
@@ -70,13 +74,13 @@ class Properties(collections.MutableMapping):
         return len(self.data)
 
     def __repr__(self):
-        return'{0}.{1.__class__.__name__}({1.data!r}, defaults={1.defaults!r})'\
-                .format(__package__, self)
+        return '{0.__module__}.{0.__name__}({1.data!r}, defaults={1.defaults!r})'\
+                .format(type(self), self)
 
     def __eq__(self, other):
         if isinstance(other, Properties):
             return self.data == other.data and self.defaults == other.defaults
-        elif isinstance(other, collections.Mapping):
+        elif isinstance(other, Mapping):
             return dict(self) == other
         else:
             return NotImplemented

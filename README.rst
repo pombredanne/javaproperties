@@ -6,19 +6,22 @@
 .. image:: https://travis-ci.org/jwodder/javaproperties.svg?branch=master
     :target: https://travis-ci.org/jwodder/javaproperties
 
-.. image:: https://coveralls.io/repos/github/jwodder/javaproperties/badge.svg?branch=master
-    :target: https://coveralls.io/github/jwodder/javaproperties?branch=master
+.. image:: https://codecov.io/gh/jwodder/javaproperties/branch/master/graph/badge.svg
+    :target: https://codecov.io/gh/jwodder/javaproperties
 
 .. image:: https://img.shields.io/pypi/pyversions/javaproperties.svg
-    :target: https://pypi.python.org/pypi/javaproperties
+    :target: https://pypi.org/project/javaproperties
 
 .. image:: https://img.shields.io/github/license/jwodder/javaproperties.svg?maxAge=2592000
     :target: https://opensource.org/licenses/MIT
     :alt: MIT License
 
+.. image:: https://img.shields.io/badge/Say%20Thanks-!-1EAEDB.svg
+    :target: https://saythanks.io/to/jwodder
+
 `GitHub <https://github.com/jwodder/javaproperties>`_
-| `PyPI <https://pypi.python.org/pypi/javaproperties>`_
-| `Documentation <https://javaproperties.readthedocs.io/en/latest>`_
+| `PyPI <https://pypi.org/project/javaproperties>`_
+| `Documentation <https://javaproperties.readthedocs.io>`_
 | `Issues <https://github.com/jwodder/javaproperties/issues>`_
 
 ``javaproperties`` provides support for reading & writing |properties|_ (both
@@ -39,10 +42,6 @@ Just use `pip <https://pip.pypa.io>`_ (You have pip, right?) to install
 ``javaproperties`` and its dependencies::
 
     pip install javaproperties
-
-If you happen to be still stuck using Python 2.6, you will need to make sure
-that the `ordereddict <https://pypi.python.org/pypi/ordereddict>`_ package is
-installed as well: ``pip install ordereddict``
 
 
 Examples

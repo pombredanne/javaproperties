@@ -1,11 +1,7 @@
 from   __future__     import unicode_literals
+from   collections    import OrderedDict
 import pytest
 from   javaproperties import InvalidUEscapeError, loads
-
-try:
-    from collections import OrderedDict
-except ImportError:
-    from ordereddict import OrderedDict
 
 def test_loads_simple():
     assert loads('key=value') == {"key": "value"}
@@ -432,4 +428,8 @@ def test_loads_key_unicode_colon_value():
 def test_loads_key_unicode_space_value():
     assert loads('key\\u0020value') == {"key value": ""}
 
-# escaped backslash + uXXXX
+def test_loads_escaped_u():
+    assert loads('key=\\\\u2603') == {"key": "\\u2603"}
+
+def test_loads_escaped_u_invalid():
+    assert loads('key=\\\\u260x') == {"key": "\\u260x"}

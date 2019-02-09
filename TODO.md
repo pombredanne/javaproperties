@@ -2,18 +2,14 @@
     - Test reading & writing bytes in both Python 2 and Python 3
     - Test utility functions in isolation
     - Run doctest on the README examples somehow?
-    - Test the `Properties` class
-    - Test on Windows with Appveyor?
     - Test `parse` (primarily handling of comments/blanks, repeated keys, and
       backslash at EOF)
 - Documentation:
     - Add docstrings for the private functions
-    - Include examples in main docs?
-    - Add an example of each format to the format descriptions
 - Handle "narrow" Python builds (only for Python versions < 3.3)
-- Give `PropertiesFile` a decent `__repr__`
 - Try to include the line number (and column number and filename?) in
   `InvalidUEscapeError`s
+- Update `Properties` to match Java 10: <https://docs.oracle.com/javase/10/docs/api/java/util/Properties.html>
 
 New Features
 ------------
@@ -31,7 +27,6 @@ New Features
 - Add a variant of `join_key_value` that escapes as few characters as possible?
 - Add a string-reading equivalent of `parse`?
 - Add an equivalent of `parse` for XML that can extract the comment?
-- Python 3.6: Take advantage of PEP 495 when handling naïve datetimes
 - Export `getproperties` and `setproperties` from `javaproperties-cli`?
 - Make `parse` return a generator of `KeyValue`, `Whitespace`, and `Comment`
   objects?
